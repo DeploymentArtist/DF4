@@ -1,0 +1,159 @@
+<job id="Config-BIOS">
+<script language="VBScript" src="ZTIUtility.vbs"/>
+<script language="VBScript"> 
+
+'//----------------------------------------------------------------------------
+'// Solution: ViaMonstra BIOS Configuration
+'//
+'//
+'// Usage: cscript ViaMonstraConfigBIOS.wsf[/debug:true]
+'// Version: 1.0 - 30 Dec, 2011 - Mikael Nystrom
+'// Version: 1.1 - 24 Sep, 2012 - Johan Arwidmark
+'//
+'// This script is provided "AS IS" with no warranties, confers no rights and 
+'// is not supported by the authors or Deployment Artists. 
+'//
+'//----------------------------------------------------------------------------
+
+'//----------------------------------------------------------------------------
+'// Global constant and variable declarations
+'//---------------------------------------------------------------------------- 
+
+'//----------------------------------------------------------------------------
+'//
+'// Global constant and variable declarations
+'//
+'//---------------------------------------------------------------------------- 
+
+Option Explicit 
+Dim iRetVal 
+
+'//----------------------------------------------------------------------------
+'// End declarations
+'//---------------------------------------------------------------------------- 
+
+'//----------------------------------------------------------------------------
+'// Main routine
+'//---------------------------------------------------------------------------- 
+
+'On Error Resume Next
+iRetVal = ZTIProcess
+ProcessResults iRetVal
+On Error Goto 0 
+
+'//---------------------------------------------------------------------------
+'//
+'// Function: ZTIProcess()
+'//
+'// Input: None
+'// 
+'// Return: Success - 0
+'// Failure - non-zero
+'//
+'// Purpose: Perform main ZTI processing
+'// 
+'//---------------------------------------------------------------------------
+Function ZTIProcess() 
+
+	Dim sMake
+	Dim sModel
+	Dim sOSVersion
+	Dim sRunDir
+	Dim sUnsup
+	Dim sModelAlias
+
+	iRetVal = Success 
+	ZTIProcess = iRetval
+
+	sMake = oEnvironment.Item("Make")
+    	sModel = oEnvironment.Item("Model")
+    	sModelAlias = oEnvironment.Item("ModelAlias")
+	
+	oLogging.CreateEntry "------------------------------------------------------------------------", LogTypeInfo
+	oLogging.CreateEntry "Config-BIOS - Runninng BIOS config:    ", LogTypeInfo
+	oLogging.CreateEntry "Config-BIOS - Make is:                 " & sMake, LogTypeInfo
+	oLogging.CreateEntry "Config-BIOS - Model is:                " & sModel, LogTypeInfo
+	oLogging.CreateEntry "Config-BIOS - ModelAlias is:           " & sModelAlias, LogTypeInfo
+	oLogging.CreateEntry "Config-BIOS - Searching...	     ", LogTypeInfo
+
+	If sModelAlias = "" Then
+		oLogging.CreateEntry "Config-BIOS - No value for ModelAlias. Unable to continue, check customsettings.ini", LogTypeInfo
+		ZTIProcess = Failure
+		oLogging.CreateEntry "------------------------------------------------------------------------", LogTypeInfo
+		Exit Function
+	End If
+
+	Select Case sModelAlias 
+		Case "ThinkPad T420" : RunConfig(sModelAlias)
+		Case "Latitude E6410" : RunConfig(sModelAlias)
+		Case "HP EliteBook 8560w" : RunConfig(sModelAlias)
+		Case "Virtual Machine" : RunConfig(sModelAlias)
+		Case Else : sUnsup = "True" 
+	End Select 
+
+		If (iRetVal = 0) or (iRetVal = 3010) then
+			ZTIProcess = Success 
+		Else 
+			ZTIProcess = Failure
+			oLogging.CreateEntry "Config-BIOS - Epic Fail, unable to configure the BIOS for " & sModelAlias, LogTypeInfo
+			oLogging.CreateEntry "------------------------------------------------------------------------", LogTypeInfo
+			Exit Function	
+		End If
+
+		If sUnsup = "True" Then 
+			oLogging.CreateEntry "Config-BIOS - No support for " & sModelAlias, LogTypeInfo
+		Else 
+			oLogging.CreateEntry "Config-BIOS - Configuring " & sModelAlias & " BIOS", LogTypeInfo
+
+		End If
+
+	oLogging.CreateEntry "------------------------------------------------------------------------", LogTypeInfo
+
+End Function
+
+Sub RunConfig(sModelAlias)
+
+	Const ForReading = 1
+	Dim objFSO
+	Dim tsInc
+	Dim strInc
+	Dim lngStory
+	Dim sRunThisScript
+
+	If not oFSO.FolderExists(oFSO.GetParentFolderName(Wscript.ScriptFullName) & "\ViaMonstraBIOSConfig\" & sModelAlias) then
+		oLogging.CreateEntry "Config-BIOS - Configuration Folder " & oFSO.GetParentFolderName(Wscript.ScriptFullName) & " was not found, unable to configure BIOS ", LogTypeError
+		iRetVal = Failure 
+		Exit Sub
+	End if
+
+	oShell.CurrentDirectory = oFSO.GetParentFolderName(Wscript.ScriptFullName) & "\ViaMonstraBIOSConfig\" & sModelAlias
+	sRunThisScript = "ConfigureBIOS.vbs"
+
+	If not oFSO.FileExists(sRunThisScript) then
+		oLogging.CreateEntry "Config-BIOS - Configuration script " & sRunThisScript & " was not found, unable to configure BIOS ", LogTypeError
+		iRetVal = Failure 
+		Exit Sub	
+	End if
+	
+	Set objFSO = CreateObject("Scripting.FileSystemObject")
+	Set tsInc = objFSO.OpenTextFile(sRunThisScript, ForReading)
+	strInc = tsInc.ReadAll
+	tsInc.Close
+	Set tsInc = Nothing
+	Set objFSO = Nothing
+	
+	Execute strInc
+End Sub 
+</script>
+</job>
+
+
+
+
+
+
+
+
+
+
+

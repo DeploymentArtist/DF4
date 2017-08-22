@@ -1,0 +1,198 @@
+<job id="ZTICheckforTPM"> 
+<script language="VBScript" src="ZTIUtility.vbs"/> 
+<script language="VBScript">
+' // *************************************************************************** 
+' // 
+' // Copyright (c) Microsoft Corporation.  All rights reserved. 
+' // 
+' // Microsoft Deployment Toolkit Solution Accelerator 
+' // 
+' // File:      ZTICheckforTPM.wsf 
+' // 
+' // Version:   5.1.1642.01 
+' // 
+' // Purpose:   Check to see if TPM is enabled and activated 
+' // 
+' // Usage:     cscript ZTICheckforTPM.wsf [/debug:true] 
+' // 
+' // ***************************************************************************
+ 
+Option Explicit 
+RunNewInstance
+ 
+'//---------------------------------------------------------------------------- 
+'// 
+'//  Global constants 
+'// 
+'//----------------------------------------------------------------------------
+ 
+'//---------------------------------------------------------------------------- 
+'//  Main Class 
+'//----------------------------------------------------------------------------
+ 
+Class ZTICheckforTPM
+ 
+    '//---------------------------------------------------------------------------- 
+    '//  Class instance variable declarations 
+    '//---------------------------------------------------------------------------- 
+    
+    Public oTpm, oBde, oBdeVol 
+    Public bTpmActivated, bTpmOwned, bTpmEnabled
+ 
+    '//---------------------------------------------------------------------------- 
+    '//  Constructor to initialize needed global objects 
+    '//----------------------------------------------------------------------------
+ 
+    Private Sub Class_Initialize
+ 
+    End Sub 
+    
+    
+    '//---------------------------------------------------------------------------- 
+    '//  Main routine 
+    '//----------------------------------------------------------------------------
+ 
+    Function Main
+ 
+        Dim iRetVal, iFreeSpace 
+        Dim sBdeHdTool 
+        Dim bDriveChange 
+        Dim sExistingBdeDrive 
+        Dim sOSDBitLockerWaitForEncryption        
+        Dim sBdeInstallSuppress    
+        Dim iPartitionCount 
+        Dim sOsType        
+        Dim sSecondPass 
+        Dim iValidateConnection 
+        Dim objWMIBDE, colEnVol, objEncVol, ColPS 
+        DIm strStatusData, sEncryptionProgress, sCDriveEncryptionStatus, strConnectionStr1 
+        Dim sSystemDrive
+ 
+        iRetVal = Success 
+        sSystemDrive = ucase(mid(oEnv("WINDIR"),1, 2)) 
+        
+        iRetVal = TPMValidate()        
+        
+        wscript.echo oEnvironment.Item("TPMEnabled") 
+        wscript.echo oEnvironment.Item("TPMActivated") 
+        Main = Success
+ 
+    End Function
+ 
+'// 
+'// END MAIN 
+'//
+ 
+'// TPM Management Functions
+ Function GetTpmInstance() 
+    
+        Dim iRetVal, sConnection 
+        Dim oTpmWmi, iTpmWmi
+ 
+        On Error Resume Next
+ 
+        sConnection = "winmgmts:{impersonationLevel=impersonate,authenticationLevel=pktPrivacy}!root\cimv2\Security\MicrosoftTpm"
+ 
+        Set oTpmWmi = GetObject(sConnection) 
+        TestAndFail SUCCESS, 6732, "Failed to Connect to MicrosoftTPM provider"
+ 
+        '// There should either be 0 or 1 instance of the TPM provider class
+ 
+        Set iTpmWmi = oTpmWmi.InstancesOf("Win32_Tpm")
+ 
+        If iTpmWmi.Count = 0 Then 
+        
+            oLogging.CreateEntry "Failed find a TPM instance in the provider class.", LogTypeInfo 
+            GetTpmInstance = Failure 
+            EXIT FUNCTION 
+            
+        End If 
+        Err.Clear
+ 
+
+        'Get a single instance of the TPM provider class 
+        Set oTpm = oTpmWmi.Get("Win32_Tpm=@") 
+        TestAndFail SUCCESS, 6733, "Get a TPM instance in the provider class"
+ 
+    End Function
+ 
+
+    Function TpmValidate () 
+    
+        Dim iRetVal, sCmd, sTpmOwnerPassword 
+        iRetVal = Success
+ 
+
+        '// Set oTpm to valid instance
+ 
+        iRetVal = GetTpmInstance() 
+        If iRetVal = Failure Then 
+            TPMValidate = Failure 
+            oEnvironment.Item("TPMEnabled") = "FALSE" 
+            oEnvironment.Item("TPMActivated") = "FALSE" 
+            Exit Function 
+        End If
+ 
+        '// Set global booleans for TPM state. Error bubble handled by subs
+ 
+        iRetVal    = GetTpmEnabled() 
+        If iRetVal = Failure Then 
+            TPMValidate = Failure 
+            oEnvironment.Item("TPMActivated") = "FALSE" 
+            Exit Function 
+        End IF
+ 
+        iRetVal = GetTpmActivated() 
+        If iRetVal = Failure Then 
+            TPMValidate = Failure 
+            oEnvironment.Item("TPMActivated") = "FALSE" 
+            Exit Function 
+        End IF
+ 
+
+        TpmValidate = Success
+ 
+    End Function
+ 
+
+    Function GetTpmEnabled() 
+        Dim iRetVal 
+        iRetVal = Success
+ 
+        iRetVal = oTpm.IsEnabled(bTpmEnabled) 
+        If iRetVal = Failure Then 
+            oLogging.CreateEntry "TPM is not currently enabled", LogTypeInfo 
+            oEnvironment.Item("TPMEnabled") = "FALSE" 
+            GetTPMEnabled = Failure 
+            Exit Function 
+            
+        End If 
+            
+        oEnvironment.Item("TPMEnabled") = "TRUE" 
+        oLogging.CreateEntry "Success TPM Enabled", LogTypeInfo 
+        GetTpmEnabled = Success
+ 
+    End Function
+ 
+ 
+ 
+    Function GetTpmActivated() 
+        Dim iRetVal 
+        iRetVal = Success
+ 
+        iRetVal = oTpm.IsActivated(bTpmActivated) 
+        If iRetVal = Failure Then 
+            oLogging.CreateEntry "TPM is not currently Activated", LogTypeInfo 
+            oEnvironment.Item("TPMActivated") = "FALSE" 
+            GetTPMActivated = Failure 
+            Exit Function 
+            
+        End If 
+        oEnvironment.Item("TPMActivated") = "TRUE" 
+        oLogging.CreateEntry "Success TPM Is Activated", LogTypeInfo 
+        GetTpmActivated = Success
+ 
+    End Function
+End Class 
+</script> 
+</job>

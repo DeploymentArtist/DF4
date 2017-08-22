@@ -1,0 +1,78 @@
+<job id="Install-ViaMonstraAppCompatibilityDatabase">
+<script language="VBScript" src="..\..\scripts\ZTIUtility.vbs"/>
+<script language="VBScript"> 
+
+'//----------------------------------------------------------------------------
+'// Purpose: Used to install the ViaMonstra Application Compatibility Database
+'// Usage: cscript Install-ViaMonstraAppCompatibilityDatabase.wsf [/debug:true]
+'// Version: 1.1 - August 8, 2012 - Johan Arwidmark
+'//
+'// This script is provided "AS IS" with no warranties, confers no rights and 
+'// is not supported by the authors or Deployment Artist. 
+'//
+'//----------------------------------------------------------------------------
+
+'//----------------------------------------------------------------------------
+'// Global constant and variable declarations
+'//---------------------------------------------------------------------------- 
+
+Option Explicit 
+Dim iRetVal 
+
+'//----------------------------------------------------------------------------
+'// End declarations
+'//---------------------------------------------------------------------------- 
+
+'//----------------------------------------------------------------------------
+'// Main routine
+'//---------------------------------------------------------------------------- 
+
+On Error Resume Next
+iRetVal = ZTIProcess
+ProcessResults iRetVal
+On Error Goto 0 
+
+'//---------------------------------------------------------------------------
+'//
+'// Function: ZTIProcess()
+'//
+'// Input: None
+'// 
+'// Return: Success - 0
+'// Failure - non-zero
+'//
+'// Purpose: Perform main ZTI processing
+'// 
+'//---------------------------------------------------------------------------
+
+Function ZTIProcess() 
+
+	Dim sDatabaseFile
+	Dim sArguments
+
+	sDatabaseFile = oUtility.ScriptDir & "\Source\ViaMonstraAppCompatDatabaseVersion1.sdb"
+	sArguments = "-q"
+
+	oLogging.CreateEntry oUtility.ScriptName & ": Starting installation", LogTypeInfo
+
+	If not oFSO.FileExists(sDatabaseFile) then
+		oLogging.CreateEntry oUtility.ScriptName & ": " & sDatabaseFile & " was not found, unable to install", LogTypeError
+		ZTIProcess = Failure
+		Exit Function
+	End if
+
+	iRetVal = oUtility.RunWithHeartbeat("sdbinst """ & sDatabaseFile & """ " & sArguments)
+	
+	if (iRetVal = 0) or (iRetVal = 3010) then
+		ZTIProcess = Success 
+	Else 
+		ZTIProcess = Failure
+	End If
+	
+	oLogging.CreateEntry oUtility.ScriptName & ": Return code from command = " & iRetVal, LogTypeInfo
+	oLogging.CreateEntry oUtility.ScriptName & ": Finished installation", LogTypeInfo
+	
+End Function 
+
+</script>
+</job>

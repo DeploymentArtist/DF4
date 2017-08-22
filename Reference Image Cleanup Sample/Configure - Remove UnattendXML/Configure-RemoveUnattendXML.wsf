@@ -1,0 +1,70 @@
+<job id="Configure-RemoveUnattendXML">
+<script language="VBScript" src="..\..\scripts\ZTIUtility.vbs"/>
+<script language="VBScript"> 
+
+'//----------------------------------------------------------------------------
+'// Purpose: Used to remove unattend.xml
+'// Usage: cscript Configure-RemoveUnattendXML [/debug:true]
+'// Version: 1.0 - 8 Nov 2012 - Mikael Nystrom
+'//
+'// This script is provided "AS IS" with no warranties, confers no rights and 
+'// is not supported by the authors or Deployment Artist. 
+'//
+'//----------------------------------------------------------------------------
+
+'//----------------------------------------------------------------------------
+'// Global constant and variable declarations
+'//---------------------------------------------------------------------------- 
+
+Option Explicit 
+Dim iRetVal 
+
+'//----------------------------------------------------------------------------
+'// End declarations
+'//---------------------------------------------------------------------------- 
+
+'//----------------------------------------------------------------------------
+'// Main routine
+'//---------------------------------------------------------------------------- 
+
+On Error Resume Next
+iRetVal = ZTIProcess
+ProcessResults iRetVal
+On Error Goto 0 
+
+'//---------------------------------------------------------------------------
+'//
+'// Function: ZTIProcess()
+'//
+'// Input: None
+'// 
+'// Return: Success - 0
+'// Failure - non-zero
+'//
+'// Purpose: Perform main ZTI processing
+'// 
+'//---------------------------------------------------------------------------
+
+Function ZTIProcess() 
+
+	Dim sFile
+	sFile = "C:\Windows\Panther\unattend.xml"
+
+	oLogging.CreateEntry oUtility.ScriptName & ": Configuration Start", LogTypeInfo
+	
+
+	If not oFSO.FileExists(sFile) then
+		oLogging.CreateEntry oUtility.ScriptName & ": " & sFile & " was not found, unable to remove", LogTypeError
+		ZTIProcess = Failure
+		Exit Function
+	End if
+
+	oFileHandling.DeleteFile sFile
+	
+	oLogging.CreateEntry oUtility.ScriptName & ": Return code from command = " & iRetVal, LogTypeInfo
+	oLogging.CreateEntry oUtility.ScriptName & ": Finished Configuration", LogTypeInfo
+	
+End Function 
+
+</script>
+</job>

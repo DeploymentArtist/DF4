@@ -1,0 +1,9 @@
+English
+Activate Embedded Security On Next Boot
+	*Enable
+Embedded Security Activation Policy
+	*No prompts
+	F1 to Boot
+	Allow user to reject
+Embedded Security Device Availability
+	*Available

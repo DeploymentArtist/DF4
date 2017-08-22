@@ -1,0 +1,31 @@
+<h1>Select a ViaMonstra Role</h1>
+<table border="0" cellspacing="1" cellpadding="1" >
+     <tr>
+        <td width="250">Select Role</td>
+        <td>
+        <Select name="ViaMonstraRole">
+	<option value="Standard PC" SELECTED >Standard PC </option>
+	<option value="Accounting">Accounting</option>
+       </Select>
+       </td>
+     </tr>
+</table>
+<h2>Deployment Info</h2>
+<table border="1" cellspacing="1" cellpadding="1" align="left">
+      <tr>
+        <td width=”250"><em>IP Address (IPAddress001)</em></td>
+        <td><input style=”width: 340px” name=ipaddress001 readonly/></td>
+      </tr>
+      <tr>
+        <td width=”250" align=”right”><em>Default Gateway (DefaultGateway001)</em></td>
+        <td><input style=”width: 340px” name=DefaultGateway001 readonly/></td>
+      </tr>
+      <tr>
+        <td width=”250" align=”right”><em>Deployment root (Deployroot)</em></td>
+        <td><input style=”width: 340px” name=DeployRoot readonly/></td>
+      </tr>
+      <tr>
+        <td width=”250" align=”right”><em>Log Share (SLShare)</em></td>
+        <td><input style=”width: 340px” name=SLShare readonly/></td>
+      </tr>
+</table>

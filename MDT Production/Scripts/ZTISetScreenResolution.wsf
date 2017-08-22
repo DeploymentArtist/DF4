@@ -1,0 +1,64 @@
+<job id="ZTISetScreenResolution">
+<script language="VBScript" src="ZTIUtility.vbs"/>
+<script language="VBScript">
+
+'//----------------------------------------------------------------------------
+'// Solution: Hydration
+'// Purpose: Used to remove default screen resolution settings if not specified in the rules
+'// Usage: cscript ZTISetScreenResolution.wsf [/debug:true]
+'// Version: 1.0 - July 22, 2012 - Johan Arwidmark
+'//
+'// This script is provided "AS IS" with no warranties, confers no rights and 
+'// is not supported by the authors or Deployment Artist. 
+'//
+'//----------------------------------------------------------------------------
+
+' Unless Screen Resolution is specified in cs.ini, remove the default values so that Windows can detect automatically
+If oEnvironment.Item("XResolution") = "" Then 
+
+    oLogging.CreateEntry "Screen resolution Not specified in the rules, removing default entry", LogTypeInfo
+
+    If Instr(1,oEnvironment.Item("OSDAnswerFilePath"),".txt",vbTextCompare) >0 then
+
+        oLogging.CreateEntry "Legacy Operating System detected, do nothing", LogTypeInfo
+
+        ' Future Windows XP / Windows Server 2003 code goes here     
+      
+    ElseIF Instr(1,oEnvironment.Item("OSDAnswerFilePath"),".xml",vbTextCompare) >0 then
+           
+        sUnattendXml = oEnvironment.Item("OSDAnswerFilePath")
+        oLogging.CreateEntry "Windows Vista or later detected, remove display settings", LogTypeInfo
+
+        Set oUnattendXml = CreateObject("MSXML2.DOMDocument")
+        oUnattendXml.load sUnattendXml
+        oLogging.CreateEntry "Loaded " & sUnattendXml, LogTypeInfo
+
+	    sXPath = "/unattend/settings[@pass='oobeSystem']/component[@name='Microsoft-Windows-Shell-Setup']/Display"
+	    Set oNode=oUnattendXml.selectSingleNode(sXPath)
+
+	    If not (oNode is Nothing) then
+		    oNode.parentNode.removeChild oNode
+	    End if	
+
+        Set objNode = Nothing
+        
+        oLogging.CreateEntry sUnattendXml & " updated, saving the changes", LogTypeInfo
+        oUnattendXml.Save sUnattendXml 
+        Set objXML = Nothing
+
+    End If
+
+Else
+
+	oLogging.CreateEntry "XResolution value is: " & oEnvironment.Item("XResolution"), LogTypeInfo
+	oLogging.CreateEntry "YResolution value is: " & oEnvironment.Item("YResolution"), LogTypeInfo
+
+	oLogging.CreateEntry "Screen resolution is specified in the rules, do nothing", LogTypeInfo
+
+End If
+
+
+
+
+</script>
+</job>
